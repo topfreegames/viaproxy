@@ -83,6 +83,6 @@ which can safely be casted to a viaproxy.Conn:
 
 Using viaproxy.Conn objects whenever a net.Conn is expected should be
 safe in all cases. If you encounter an issue please send a bug report
-to https://github.com/inkel/viaproxy/issues
+to https://github.com/topfreegames/viaproxy/issues
 */
 package viaproxy

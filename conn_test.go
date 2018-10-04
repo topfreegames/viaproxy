@@ -8,7 +8,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/inkel/viaproxy"
+	"github.com/topfreegames/viaproxy"
 )
 
 type conn struct {

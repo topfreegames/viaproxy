@@ -3,11 +3,10 @@ package viaproxy
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"net"
 	"strconv"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // Wrap takes a net.Conn and returns a pointer to Conn that knows how to
@@ -74,7 +73,7 @@ func (c *Conn) initLoop() error {
 	for i := 0; i < maxHeaders; i++ {
 		buf, err := c.r.Peek(len(proxy))
 		if err != nil {
-			return errors.Wrap(err, "parsing proxy protocol header on loop")
+			return fmt.Errorf("parsing proxy protocol header on loop: %q", err)
 		}
 
 		if !bytes.Equal(buf, proxy) {
@@ -98,12 +97,12 @@ func (c *Conn) init() error {
 		return err
 	}
 	if !bytes.Equal(buf, []byte("PROXY ")) {
-		return errors.Errorf("invalid proxy protocol header prefix: %q", buf[:n])
+		return fmt.Errorf("invalid proxy protocol header prefix: %q", buf[:n])
 	}
 
 	buf, err = c.r.Peek(len(unknown))
 	if err != nil {
-		return errors.Wrap(err, "parsing proxy protocol header")
+		return fmt.Errorf("parsing proxy protocol header: %q", err)
 	}
 	if bytes.Equal(buf, unknown) {
 		_, err = c.r.Discard(len(unknown))
@@ -115,37 +114,37 @@ func (c *Conn) init() error {
 	// This line cannot return error as the buffer of the *bufio.Reader already contains at least five characters from the call to Peek above.
 	c.r.Read(buf)
 	if !bytes.Equal([]byte("TCP4 "), buf) && !bytes.Equal([]byte("TCP6 "), buf) {
-		return errors.Errorf("unrecognized protocol: %q", buf)
+		return fmt.Errorf("unrecognized protocol: %q", buf)
 	}
 
 	// CLIENT IP
 	clientIP, err := c.readIP()
 	if err != nil {
-		return errors.Wrap(err, "cannot parse client IP")
+		return fmt.Errorf("cannot parse client IP: %q", err)
 	}
 
 	// PROXY IP
 	proxyIP, err := c.readIP()
 	if err != nil {
-		return errors.Wrap(err, "cannot parse proxy IP")
+		return fmt.Errorf("cannot parse proxy IP: %q", err)
 	}
 
 	// CLIENT PORT
 	clientPort, err := c.readPort(' ')
 	if err != nil {
-		return errors.Wrap(err, "cannot parse client port")
+		return fmt.Errorf("cannot parse client port: %q", err)
 	}
 
 	// PROXY PORT
 	proxyPort, err := c.readPort('\r')
 	if err != nil {
-		return errors.Wrap(err, "cannot parse proxy port")
+		return fmt.Errorf("cannot parse proxy port: %q", err)
 	}
 
 	// Trailing
 	b, err := c.r.ReadByte()
 	if err != nil || b != '\n' {
-		return errors.Wrap(err, "invalid trailing")
+		return fmt.Errorf("invalid trailing: %q", err)
 	}
 
 	c.remote = &net.TCPAddr{IP: clientIP, Port: clientPort}
@@ -162,7 +161,7 @@ func (c *Conn) readIP() (net.IP, error) {
 
 	ip := net.ParseIP(p[:len(p)-1])
 	if ip == nil {
-		return nil, errors.Errorf("cannot parse IP %q", p)
+		return nil, fmt.Errorf("cannot parse IP %q", p)
 	}
 
 	return ip, nil
