@@ -14,7 +14,7 @@ import (
 // supports the Proxy Protocol.
 func Wrap(cn net.Conn) (*Conn, error) {
 	c := &Conn{cn: cn, r: bufio.NewReader(cn)}
-	if err := c.initLoop(); err != nil {
+	if err := c.parse(); err != nil {
 		return nil, err
 	}
 	return c, nil
@@ -69,24 +69,18 @@ var (
 
 const maxHeaders = 3
 
-func (c *Conn) initLoop() error {
-	for i := 0; i < maxHeaders; i++ {
-		buf, err := c.r.Peek(len(proxy))
-		if err != nil {
-			return fmt.Errorf("parsing proxy protocol header on loop: %q", err)
-		}
-
-		if !bytes.Equal(buf, proxy) {
-			return nil
-		}
-
-		err = c.init()
-		if err != nil {
-			return err
-		}
+func (c *Conn) parse() error {
+	buf, err := c.r.Peek(len(proxy))
+	if err != nil {
+		return fmt.Errorf("parsing proxy protocol header on loop: %q", err)
 	}
 
-	return nil
+	if !bytes.Equal(buf, proxy) {
+		return nil
+	}
+
+	err = c.init()
+	return err
 }
 
 func (c *Conn) init() error {

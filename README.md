@@ -4,7 +4,7 @@ Regular Go `net` doesn't support [Proxy Protocol](http://www.haproxy.com/blog/ha
 
 You can read more about this in my [Proxy Protocol: what is it and how to use it with Go](https://inkel.github.io/posts/proxy-protocol/) article.
 
-If you are not using a proxy-protocol, this wrapper will also work. If multiple proxy-protocol headers are sent, the last one is considered.
+If you are not using a proxy-protocol, this wrapper will also work.
 
 ## Usage
 In your server, you can do the following:
