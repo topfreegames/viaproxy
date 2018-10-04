@@ -15,7 +15,7 @@ import (
 // supports the Proxy Protocol.
 func Wrap(cn net.Conn) (*Conn, error) {
 	c := &Conn{cn: cn, r: bufio.NewReader(cn)}
-	if err := c.init(); err != nil {
+	if err := c.initLoop(); err != nil {
 		return nil, err
 	}
 	return c, nil
@@ -63,7 +63,32 @@ func (c *Conn) SetWriteDeadline(t time.Time) error { return c.cn.SetWriteDeadlin
 // Write implements the Conn Write method.
 func (c *Conn) Write(b []byte) (int, error) { return c.cn.Write(b) }
 
-var unknown = []byte("UNKNOWN\r\n")
+var (
+	unknown = []byte("UNKNOWN\r\n")
+	proxy   = []byte("PROXY ")
+)
+
+const maxHeaders = 3
+
+func (c *Conn) initLoop() error {
+	for i := 0; i < maxHeaders; i++ {
+		buf, err := c.r.Peek(len(proxy))
+		if err != nil {
+			return errors.Wrap(err, "parsing proxy protocol header on loop")
+		}
+
+		if !bytes.Equal(buf, proxy) {
+			return nil
+		}
+
+		err = c.init()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 func (c *Conn) init() error {
 	// PROXY

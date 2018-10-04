@@ -43,9 +43,9 @@ func TestWrap(t *testing.T) {
 		{[]byte("PROXY TCP4 192.168.1.20 10.0.0.1 5678 1234\r\nfoo\r\nbar\r\n"), []byte("foo\r\nbar\r\n"), "192.168.1.20", 5678, &net.TCPAddr{IP: net.IPv4(10, 0, 0, 1), Port: 1234}, false},
 		{[]byte("PROXY TCP6 fe80::aede:48ff:fe00:1122 ::1 5678 1234\r\nfoo\r\nbar\r\n"), []byte("foo\r\nbar\r\n"), "fe80::aede:48ff:fe00:1122", 5678, &net.TCPAddr{IP: net.ParseIP("::1"), Port: 1234}, false},
 		{[]byte("PROXY UNKNOWN\r\nfoo\r\nbar\r\n"), []byte("foo\r\nbar\r\n"), "10.0.1.2", 1234, nil, false},
+		{[]byte("GET / HTTP/1.0\r\n"), []byte("GET / HTTP/1.0\r\n"), "10.0.1.2", 1234, nil, false},
 
 		// Invalid proxy protocol lines
-		{[]byte("GET / HTTP/1.0\r\n"), nil, "", -1, nil, true},
 		{[]byte("PROXY TCP5\r\n"), nil, "", -1, nil, true},
 		{[]byte("PROXY TCP4 192.168.X.20 10.0.0.1 5678 1234\r\n"), nil, "", -1, nil, true},
 		{[]byte("PROXY TCP4 192.168.1.20 10.X.0.1 5678 1234\r\n"), nil, "", -1, nil, true},
