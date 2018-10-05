@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"strconv"
 	"time"
@@ -67,15 +68,13 @@ var (
 	proxy   = []byte("PROXY ")
 )
 
-const maxHeaders = 3
-
 func (c *Conn) parse() error {
-	if c.r.Buffered() < len(proxy) {
-		return nil
-	}
-
 	buf, err := c.r.Peek(len(proxy))
 	if err != nil {
+		if err == bufio.ErrBufferFull || err == io.EOF {
+			return nil
+		}
+
 		return fmt.Errorf("parsing proxy protocol header on loop: %q", err)
 	}
 
